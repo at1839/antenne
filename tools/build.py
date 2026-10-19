@@ -62,7 +62,16 @@ figure{margin:0}figcaption{font-size:.82rem;color:var(--dim);margin-top:.5rem}
 figcaption a{color:var(--accent);text-decoration-color:var(--accent)}
 svg{width:100%;height:auto;display:block}svg text{fill:var(--dim);font-family:var(--mono)}
 .photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:1rem}
-img.photo{width:100%;max-height:32rem;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+img.photo{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;border-radius:10px;border:1px solid var(--line);cursor:zoom-in;transition:border-color .15s}
+.photos a:hover img.photo,.photos a:focus-visible img.photo{border-color:var(--accent)}
+dialog.lightbox{border:0;padding:0;background:transparent;max-width:100vw;max-height:100vh;width:100vw;height:100vh;color:var(--text,#eee)}
+dialog.lightbox::backdrop{background:rgba(0,0,0,.92)}
+.lightbox figure{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3.5rem 4rem 1.5rem}
+.lightbox img{max-width:100%;max-height:calc(100vh - 9rem);object-fit:contain;border-radius:6px}
+.lightbox figcaption{margin-top:.8rem;text-align:center;max-width:44rem}
+.lightbox button{position:absolute;font:1.6rem var(--mono);line-height:1;color:var(--muted);background:rgba(0,0,0,.55);border:1px solid var(--line-strong);border-radius:999px;width:2.8rem;height:2.8rem;cursor:pointer}
+.lightbox button:hover{color:#fff}.lightbox .lb-close{top:1rem;right:1rem}
+.lightbox .lb-prev{left:.8rem;top:50%}.lightbox .lb-next{right:.8rem;top:50%}
 .viewer{position:relative;height:min(70vh,36rem);border:1px solid var(--line);border-radius:14px;overflow:hidden;
 background:radial-gradient(ellipse at 50% 40%,#0d1f14 0%,#050806 55%,#000 100%);touch-action:none;cursor:grab}
 .viewer canvas{width:100%;height:100%;display:block}
@@ -189,6 +198,20 @@ def svg_polar(angles_deg, gains, gmax, zero_at_top=True):
     return "".join(out)
 
 
+LIGHTBOX = (
+    "<dialog class=lightbox aria-label='Foto ingrandita'><figure><img alt=''><figcaption></figcaption></figure>"
+    "<button class=lb-close aria-label=Chiudi>&times;</button>"
+    "<button class=lb-prev aria-label=Precedente>&lsaquo;</button>"
+    "<button class=lb-next aria-label=Successiva>&rsaquo;</button></dialog>"
+    "<script>(()=>{const d=document.querySelector('dialog.lightbox'),L=[...document.querySelectorAll('a[data-lb]')],"
+    "im=d.querySelector('img'),cp=d.querySelector('figcaption');let i=0;"
+    "const show=n=>{i=(n+L.length)%L.length;im.src=L[i].href;im.alt=cp.textContent=L[i].firstChild.alt};"
+    "L.forEach((a,n)=>a.addEventListener('click',e=>{e.preventDefault();show(n);d.showModal()}));"
+    "d.querySelector('.lb-close').onclick=()=>d.close();"
+    "d.querySelector('.lb-prev').onclick=()=>show(i-1);d.querySelector('.lb-next').onclick=()=>show(i+1);"
+    "d.addEventListener('click',e=>{if(e.target===d||e.target.tagName==='FIGURE')d.close()});"
+    "d.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')show(i-1);if(e.key==='ArrowRight')show(i+1)});"
+    "})()</script>")
 IMPORTMAP = ("<script type=importmap>{\"imports\":{\"three\":\"../vendor/three/three.module.min.js\","
              "\"three/addons/\":\"../vendor/three/\"}}</script>")
 
@@ -457,7 +480,8 @@ def build():
                                f"Guadagno {r['gmax']:.1f} dBi, avanti/dietro {r['fb']:.1f} dB, ROS {r['swr']:.2f} "
                                f"a {F0_IT} MHz, impedenza {fmt_z(r['z'])}, polarizzazione {pol.lower()}."})
         index_html(notes, url, f"Antenne · {meta['title']}", meta["title"], d.name)
-        photos = "".join(f"<figure><img class=photo loading=lazy src='{html.escape(p['file'])}' alt='{html.escape(p['alt'])}'>"
+        photos = "".join(f"<figure><a href='{html.escape(p['file'])}' data-lb>"
+                         f"<img class=photo loading=lazy src='{html.escape(p['file'])}' alt='{html.escape(p['alt'])}'></a>"
                          f"<figcaption>{html.escape(p['alt'])}</figcaption></figure>" for p in meta.get("photos", []))
         gnd = "spazio libero" if not nec.has_ground(deck) else "sopra il terreno definito nel file"
         cls = "ok" if r["swr"] < 1.5 else "warn" if r["swr"] < 2 else "bad"
@@ -482,7 +506,7 @@ def build():
                 f"{summary}{insights(deck, r, mounted)}{viewer(deck, r)}"
                 f"<h2>Adattamento e diagrammi</h2>{charts(r)}"
                 f"<p class=note>Simulazione NEC-2 (PyNEC) a {F0_IT} MHz, {gnd}. I valori reali cambiano con supporto, cavo e ostacoli.</p>"
-                + (f"<h2>Foto</h2><div class=photos>{photos}</div>" if photos else "")
+                + (f"<h2>Foto</h2><div class=photos>{photos}</div>{LIGHTBOX}" if photos else "")
                 + (f"<div class=prose>{notes}</div>" if notes else "")
                 + nec_explained(deck, nec_text)
                 + "<h2>File del modello</h2><p><a class=btn href='antenna.nec' download>Scarica antenna.nec</a></p>"
