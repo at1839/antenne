@@ -4,6 +4,35 @@
   "type": "Biquad",
   "status": "Progetto di riferimento",
   "description": "La biquad è relativamente facile da costruire e fornisce un buon guadagno",
-  "photos": [],
+  "photos": [
+    {
+      "file": "fronte.jpg",
+      "alt": "Biquad montata sul palo, vista frontale, prima della taratura"
+    },
+    {
+      "file": "retro.jpg",
+      "alt": "Biquad montata, vista posteriore con piastra riflettente in alluminio"
+    },
+    {
+      "file": "orientamento-coassiale.png",
+      "alt": "Coassiale con i capi orientati in verticale"
+    },
+    {
+      "file": "vna-prima-taratura.jpg",
+      "alt": "Prima misura con il nanoVNA, antenna da accorciare"
+    },
+    {
+      "file": "nanovna-prima-misura.png",
+      "alt": "Schermata nanoVNA prima della taratura: troppa resistenza e reattanza induttiva a 869 MHz"
+    },
+    {
+      "file": "nanovna-dopo-taratura.png",
+      "alt": "Schermata nanoVNA dopo la taratura: ROS praticamente perfetto, distanza dallo schermo 40 mm"
+    },
+    {
+      "file": "prototipo-finale.jpg",
+      "alt": "Prototipo finale: elementi accorciati, un po' storti"
+    }
+  ],
   "license": "CC-BY-SA-4.0"
 }
